@@ -2,12 +2,12 @@
 /**
  * Web App per scansione sito e generazione header di sicurezza
  *
- * - Scansiona un dominio (limite pagine e redirect configurabili)
- * - Estrae risorse (script, CSS, immagini, font, iframe)
- * - Genera una bozza di Content-Security-Policy (CSP)
- * - Propone un blocco .htaccess con header di sicurezza configurabili
+ * Questa app scansiona un dominio (limitato a un certo numero di pagine e redirect),
+ * estrae le risorse (script, CSS, immagini, font, iframe) e genera:
+ * - Una bozza di Content-Security-Policy (CSP)
+ * - Un blocco .htaccess con header di sicurezza configurabili
  *
- * Requisiti: PHP con cURL abilitato
+ * Requisiti: PHP con cURL abilitato.
  */
 
 ini_set('max_execution_time', 300);
@@ -21,18 +21,18 @@ $domain         = isset($_GET['domain']) ? trim($_GET['domain']) : '';
 $maxPages       = isset($_GET['max_pages']) ? (int)$_GET['max_pages'] : $defaultMaxPages;
 $maxRedirects   = isset($_GET['max_redirects']) ? (int)$_GET['max_redirects'] : $defaultMaxRedirects;
 
-// Header di sicurezza scelti (array dei nomi, per esempio: x_xss_protection, x_frame_options, ecc.)
+// Header di sicurezza scelti (array dei nomi)
 $secHeaders = $_GET['sec_headers'] ?? [];
 if (!is_array($secHeaders)) $secHeaders = [];
 
 // Parametri specifici per header:
-$xFrameOption         = $_GET['x_frame_option'] ?? 'SAMEORIGIN';
-$referrerPolicy       = $_GET['referrer_policy'] ?? 'strict-origin-when-cross-origin';
-$hstsMaxAge           = isset($_GET['hsts_max_age']) ? (int)$_GET['hsts_max_age'] : 31536000;
-$hstsIncludeSubdomains= isset($_GET['hsts_include_subdomains']) && $_GET['hsts_include_subdomains'] === 'on';
-$hstsPreload          = isset($_GET['hsts_preload']) && $_GET['hsts_preload'] === 'on';
+$xFrameOption          = $_GET['x_frame_option'] ?? 'SAMEORIGIN';
+$referrerPolicy        = $_GET['referrer_policy'] ?? 'strict-origin-when-cross-origin';
+$hstsMaxAge            = isset($_GET['hsts_max_age']) ? (int)$_GET['hsts_max_age'] : 31536000;
+$hstsIncludeSubdomains = isset($_GET['hsts_include_subdomains']) && $_GET['hsts_include_subdomains'] === 'on';
+$hstsPreload           = isset($_GET['hsts_preload']) && $_GET['hsts_preload'] === 'on';
 
-// Permissions-Policy (inserire come stringa es. (self) oppure () per disabilitare)
+// Permissions-Policy: usa i valori indicati, es. (self) per abilitare solo per il dominio o () per disabilitare.
 $permGeolocation = $_GET['perm_geolocation'] ?? '(self)';
 $permCamera      = $_GET['perm_camera'] ?? '()';
 $permMicrophone  = $_GET['perm_microphone'] ?? '()';
@@ -289,197 +289,245 @@ if ($domain && !empty($visited)) {
   <title>Scanner CSP & Sicurezza</title>
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+  </style>
 </head>
 <body class="bg-light">
 <div class="container py-5">
   <h1 class="mb-4">Scanner CSP &amp; Header di Sicurezza</h1>
-  <p class="text-muted">Inserisci il dominio da scansionare e configura le impostazioni di sicurezza. La demo scansiona alcune pagine (fino al numero impostato) del sito, estrae le fonti (script, CSS, immagini, font, iframe) e genera una bozza di Content-Security-Policy e un blocco .htaccess con header di sicurezza.</p>
+  <p class="text-muted">Inserisci il dominio da scansionare. Per gli utenti meno esperti, la configurazione avanzata è nascosta per default. Puoi espanderla per modificare le impostazioni avanzate.</p>
 
-  <form method="get" class="row g-3 mb-5">
+  <!-- Form: Dominio sempre visibile -->
+  <form method="get" class="row g-3 mb-4">
     <div class="col-md-6">
-      <label for="domain" class="form-label">Dominio (es: https://example.com)</label>
-      <input type="text" name="domain" id="domain" class="form-control" placeholder="https://example.com" value="<?php echo htmlspecialchars($domain); ?>">
+      <label for="domain" class="form-label">Dominio da scansionare</label>
+      <input type="text" name="domain" id="domain" class="form-control" placeholder="https://example.com" value="<?php echo htmlspecialchars($domain); ?>" required>
+      <small class="text-muted">Inserisci l'URL completo (con http/https).</small>
     </div>
-    <div class="col-md-3">
-      <label for="max_pages" class="form-label">Max pagine da scansionare</label>
-      <input type="number" name="max_pages" id="max_pages" class="form-control" value="<?php echo $maxPages; ?>">
-      <small class="text-muted">Default: <?php echo $defaultMaxPages; ?></small>
-    </div>
-    <div class="col-md-3">
-      <label for="max_redirects" class="form-label">Max redirect da seguire</label>
-      <input type="number" name="max_redirects" id="max_redirects" class="form-control" value="<?php echo $maxRedirects; ?>">
-      <small class="text-muted">Default: <?php echo $defaultMaxRedirects; ?></small>
+    <div class="col-md-6 d-flex align-items-end">
+      <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedConfig" aria-expanded="false" aria-controls="advancedConfig">
+        Mostra Configurazione Avanzata
+      </button>
     </div>
 
-    <hr class="my-4">
+    <!-- Sezione avanzata collassabile -->
+    <div class="collapse" id="advancedConfig">
+      <div class="card card-body mt-3">
+        <h4>Impostazioni di Scansione</h4>
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label for="max_pages" class="form-label">Max pagine da scansionare</label>
+            <input type="number" name="max_pages" id="max_pages" class="form-control" value="<?php echo $maxPages; ?>">
+            <small class="text-muted">Numero massimo di pagine da analizzare (default: <?php echo $defaultMaxPages; ?>).</small>
+          </div>
+          <div class="col-md-3">
+            <label for="max_redirects" class="form-label">Max redirect da seguire</label>
+            <input type="number" name="max_redirects" id="max_redirects" class="form-control" value="<?php echo $maxRedirects; ?>">
+            <small class="text-muted">Numero massimo di redirect da seguire (default: <?php echo $defaultMaxRedirects; ?>).</small>
+          </div>
+        </div>
+        <hr>
+        <h4>Header di Sicurezza</h4>
+        <!-- X-XSS-Protection -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_xss_protection" id="xss" <?php echo in_array('x_xss_protection', $secHeaders) ? 'checked' : ''; ?>>
+          <label class="form-check-label" for="xss">
+            X-XSS-Protection
+            <small class="text-muted d-block">Protegge da attacchi XSS (sebbene deprecato in alcuni browser moderni).</small>
+          </label>
+        </div>
+        <!-- X-Frame-Options -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_frame_options" id="xfo" <?php echo in_array('x_frame_options', $secHeaders) ? 'checked' : ''; ?>>
+          <label class="form-check-label" for="xfo">
+            X-Frame-Options
+            <small class="text-muted d-block">Previene il clickjacking impedendo l'incorporamento in iframe da siti esterni.</small>
+          </label>
+        </div>
+        <div class="ms-4 mb-3" style="max-width:300px;">
+          <label for="x_frame_option" class="form-label">Valore di X-Frame-Options</label>
+          <select name="x_frame_option" id="x_frame_option" class="form-select">
+            <option value="SAMEORIGIN" <?php if($xFrameOption==='SAMEORIGIN') echo 'selected'; ?>>SAMEORIGIN</option>
+            <option value="DENY" <?php if($xFrameOption==='DENY') echo 'selected'; ?>>DENY</option>
+            <option value="ALLOW-FROM" <?php if($xFrameOption==='ALLOW-FROM') echo 'selected'; ?>>ALLOW-FROM (meno supportato)</option>
+          </select>
+          <small class="text-muted">SAMEORIGIN è consigliato per la maggior parte dei siti.</small>
+        </div>
+        <!-- X-Content-Type-Options -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_content_type_options" id="xcto" <?php echo in_array('x_content_type_options', $secHeaders) ? 'checked' : ''; ?>>
+          <label class="form-check-label" for="xcto">
+            X-Content-Type-Options
+            <small class="text-muted d-block">Imposta "nosniff" per evitare interpretazioni errate dei MIME type.</small>
+          </label>
+        </div>
+        <!-- Strict-Transport-Security -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="strict_transport_security" id="hsts" <?php echo in_array('strict_transport_security', $secHeaders) ? 'checked' : ''; ?>>
+          <label class="form-check-label" for="hsts">
+            Strict-Transport-Security (HSTS)
+            <small class="text-muted d-block">Richiede HTTPS e protegge da downgrade attack.</small>
+          </label>
+        </div>
+        <div class="row ms-4 mb-3">
+          <div class="col-md-4">
+            <label for="hsts_max_age" class="form-label">Max-Age (sec)</label>
+            <input type="number" name="hsts_max_age" id="hsts_max_age" class="form-control" value="<?php echo $hstsMaxAge; ?>">
+            <small class="text-muted">Ad esempio, 31536000 (1 anno).</small>
+          </div>
+          <div class="col-md-4 form-check align-self-end">
+            <input class="form-check-input" type="checkbox" name="hsts_include_subdomains" id="hsts_include_subdomains" <?php echo $hstsIncludeSubdomains ? 'checked' : ''; ?>>
+            <label class="form-check-label" for="hsts_include_subdomains">includeSubDomains</label>
+            <small class="text-muted d-block">Consigliato se tutti i sottodomini usano HTTPS.</small>
+          </div>
+          <div class="col-md-4 form-check align-self-end">
+            <input class="form-check-input" type="checkbox" name="hsts_preload" id="hsts_preload" <?php echo $hstsPreload ? 'checked' : ''; ?>>
+            <label class="form-check-label" for="hsts_preload">preload</label>
+            <small class="text-muted d-block">Abilita l'inclusione nella lista di preload HSTS.</small>
+          </div>
+        </div>
+        <!-- Referrer-Policy -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="referrer_policy" id="rp" <?php echo in_array('referrer_policy', $secHeaders) ? 'checked' : ''; ?>>
+          <label class="form-check-label" for="rp">
+            Referrer-Policy
+            <small class="text-muted d-block">Controlla quali informazioni inviare nell'header Referer (es. "strict-origin-when-cross-origin").</small>
+          </label>
+        </div>
+        <div class="ms-4 mb-3" style="max-width:300px;">
+          <label for="referrer_policy" class="form-label">Valore di Referrer-Policy</label>
+          <select name="referrer_policy" id="referrer_policy" class="form-select">
+            <option value="no-referrer" <?php if($referrerPolicy==='no-referrer') echo 'selected'; ?>>no-referrer</option>
+            <option value="no-referrer-when-downgrade" <?php if($referrerPolicy==='no-referrer-when-downgrade') echo 'selected'; ?>>no-referrer-when-downgrade</option>
+            <option value="same-origin" <?php if($referrerPolicy==='same-origin') echo 'selected'; ?>>same-origin</option>
+            <option value="origin" <?php if($referrerPolicy==='origin') echo 'selected'; ?>>origin</option>
+            <option value="strict-origin" <?php if($referrerPolicy==='strict-origin') echo 'selected'; ?>>strict-origin</option>
+            <option value="origin-when-cross-origin" <?php if($referrerPolicy==='origin-when-cross-origin') echo 'selected'; ?>>origin-when-cross-origin</option>
+            <option value="strict-origin-when-cross-origin" <?php if($referrerPolicy==='strict-origin-when-cross-origin') echo 'selected'; ?>>strict-origin-when-cross-origin</option>
+            <option value="unsafe-url" <?php if($referrerPolicy==='unsafe-url') echo 'selected'; ?>>unsafe-url</option>
+          </select>
+          <small class="text-muted">Seleziona la policy più adatta al tuo caso.</small>
+        </div>
+        <!-- Permissions-Policy -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="permissions_policy" id="pp" <?php echo in_array('permissions_policy', $secHeaders) ? 'checked' : ''; ?>>
+          <label class="form-check-label" for="pp">
+            Permissions-Policy
+            <small class="text-muted d-block">Limita l'accesso a API come geolocalizzazione, camera, microfono, payment e fullscreen.</small>
+          </label>
+        </div>
+        <div class="row ms-4 mb-3">
+          <div class="col-md-2">
+            <label for="perm_geolocation" class="form-label">geolocation</label>
+            <input type="text" name="perm_geolocation" id="perm_geolocation" class="form-control" placeholder="(self) o ()" value="<?php echo htmlspecialchars($permGeolocation); ?>">
+            <small class="text-muted">Esempio: (self)</small>
+          </div>
+          <div class="col-md-2">
+            <label for="perm_camera" class="form-label">camera</label>
+            <input type="text" name="perm_camera" id="perm_camera" class="form-control" placeholder="(self) o ()" value="<?php echo htmlspecialchars($permCamera); ?>">
+            <small class="text-muted">Esempio: () per disabilitare</small>
+          </div>
+          <div class="col-md-2">
+            <label for="perm_microphone" class="form-label">microphone</label>
+            <input type="text" name="perm_microphone" id="perm_microphone" class="form-control" placeholder="(self) o ()" value="<?php echo htmlspecialchars($permMicrophone); ?>">
+            <small class="text-muted">Esempio: ()</small>
+          </div>
+          <div class="col-md-2">
+            <label for="perm_payment" class="form-label">payment</label>
+            <input type="text" name="perm_payment" id="perm_payment" class="form-control" placeholder="(self) o ()" value="<?php echo htmlspecialchars($permPayment); ?>">
+            <small class="text-muted">Esempio: (self) per abilitare solo il tuo dominio</small>
+          </div>
+          <div class="col-md-2">
+            <label for="perm_fullscreen" class="form-label">fullscreen</label>
+            <input type="text" name="perm_fullscreen" id="perm_fullscreen" class="form-control" placeholder="(self) o ()" value="<?php echo htmlspecialchars($permFullscreen); ?>">
+            <small class="text-muted">Esempio: (self)</small>
+          </div>
+        </div>
+        <!-- COOP -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="coop" id="coop_cb" <?php echo in_array('coop', $secHeaders) ? 'checked' : ''; ?>>
+          <label class="form-check-label" for="coop_cb">
+            Cross-Origin-Opener-Policy (COOP)
+            <small class="text-muted d-block">Isola la finestra da contesti cross-origin per prevenire attacchi di tipo side-channel.</small>
+          </label>
+        </div>
+        <div class="ms-4 mb-3" style="max-width:300px;">
+          <label for="coop" class="form-label">Valore di COOP</label>
+          <select name="coop" id="coop" class="form-select">
+            <option value="unsafe-none" <?php if($coop==='unsafe-none') echo 'selected'; ?>>unsafe-none (disabilitato)</option>
+            <option value="same-origin" <?php if($coop==='same-origin') echo 'selected'; ?>>same-origin</option>
+            <option value="same-origin-allow-popups" <?php if($coop==='same-origin-allow-popups') echo 'selected'; ?>>same-origin-allow-popups</option>
+          </select>
+          <small class="text-muted">Consigliato: same-origin.</small>
+        </div>
+        <!-- COEP -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="coep" id="coep_cb" <?php echo in_array('coep', $secHeaders) ? 'checked' : ''; ?>>
+          <label class="form-check-label" for="coep_cb">
+            Cross-Origin-Embedder-Policy (COEP)
+            <small class="text-muted d-block">Richiede che le risorse cross-origin siano servite con CORP/CORS.</small>
+          </label>
+        </div>
+        <div class="ms-4 mb-3" style="max-width:300px;">
+          <label for="coep" class="form-label">Valore di COEP</label>
+          <select name="coep" id="coep" class="form-select">
+            <option value="unsafe-none" <?php if($coep==='unsafe-none') echo 'selected'; ?>>unsafe-none (disabilitato)</option>
+            <option value="require-corp" <?php if($coep==='require-corp') echo 'selected'; ?>>require-corp</option>
+            <option value="credentialless" <?php if($coep==='credentialless') echo 'selected'; ?>>credentialless</option>
+          </select>
+          <small class="text-muted">Scegli in base alle risorse usate dal sito.</small>
+        </div>
+        <!-- CORP -->
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="corp" id="corp_cb" <?php echo in_array('corp', $secHeaders) ? 'checked' : ''; ?>>
+          <label class="form-check-label" for="corp_cb">
+            Cross-Origin-Resource-Policy (CORP)
+            <small class="text-muted d-block">Definisce chi può incorporare le tue risorse.</small>
+          </label>
+        </div>
+        <div class="ms-4 mb-3" style="max-width:300px;">
+          <label for="corp" class="form-label">Valore di CORP</label>
+          <select name="corp" id="corp" class="form-select">
+            <option value="cross-origin" <?php if($corp==='cross-origin') echo 'selected'; ?>>cross-origin (più permissivo)</option>
+            <option value="same-site" <?php if($corp==='same-site') echo 'selected'; ?>>same-site</option>
+            <option value="same-origin" <?php if($corp==='same-origin') echo 'selected'; ?>>same-origin (più restrittivo)</option>
+          </select>
+          <small class="text-muted">Seleziona la policy in base alle tue esigenze.</small>
+        </div>
+      </div>
+    </div>
 
-    <h4>Header di Sicurezza da Includere</h4>
-    <!-- X-XSS-Protection -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_xss_protection" id="xss" <?php echo in_array('x_xss_protection', $secHeaders) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="xss">
-        X-XSS-Protection <small class="text-muted">(Protegge da attacchi XSS; deprecato nei browser moderni)</small>
-      </label>
-    </div>
-    <!-- X-Frame-Options -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_frame_options" id="xfo" <?php echo in_array('x_frame_options', $secHeaders) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="xfo">
-        X-Frame-Options <small class="text-muted">(Previene clickjacking)</small>
-      </label>
-    </div>
-    <div class="ms-4 mb-3" style="max-width:300px;">
-      <label for="x_frame_option" class="form-label">Valore</label>
-      <select name="x_frame_option" id="x_frame_option" class="form-select">
-        <option value="SAMEORIGIN" <?php if($xFrameOption==='SAMEORIGIN') echo 'selected'; ?>>SAMEORIGIN</option>
-        <option value="DENY" <?php if($xFrameOption==='DENY') echo 'selected'; ?>>DENY</option>
-        <option value="ALLOW-FROM" <?php if($xFrameOption==='ALLOW-FROM') echo 'selected'; ?>>ALLOW-FROM</option>
-      </select>
-    </div>
-    <!-- X-Content-Type-Options -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_content_type_options" id="xcto" <?php echo in_array('x_content_type_options', $secHeaders) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="xcto">
-        X-Content-Type-Options <small class="text-muted">(Imposta "nosniff")</small>
-      </label>
-    </div>
-    <!-- Strict-Transport-Security -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" name="sec_headers[]" value="strict_transport_security" id="hsts" <?php echo in_array('strict_transport_security', $secHeaders) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="hsts">
-        Strict-Transport-Security (HSTS) <small class="text-muted">(Richiede HTTPS e protegge dalle downgrade attack)</small>
-      </label>
-    </div>
-    <div class="row ms-4 mb-3">
-      <div class="col-md-4">
-        <label for="hsts_max_age" class="form-label">Max-Age (sec)</label>
-        <input type="number" name="hsts_max_age" id="hsts_max_age" class="form-control" value="<?php echo $hstsMaxAge; ?>">
-      </div>
-      <div class="col-md-4 form-check align-self-end">
-        <input class="form-check-input" type="checkbox" name="hsts_include_subdomains" id="hsts_include_subdomains" <?php echo $hstsIncludeSubdomains ? 'checked' : ''; ?>>
-        <label class="form-check-label" for="hsts_include_subdomains">includeSubDomains</label>
-      </div>
-      <div class="col-md-4 form-check align-self-end">
-        <input class="form-check-input" type="checkbox" name="hsts_preload" id="hsts_preload" <?php echo $hstsPreload ? 'checked' : ''; ?>>
-        <label class="form-check-label" for="hsts_preload">preload</label>
-      </div>
-    </div>
-    <!-- Referrer-Policy -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" name="sec_headers[]" value="referrer_policy" id="rp" <?php echo in_array('referrer_policy', $secHeaders) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="rp">
-        Referrer-Policy <small class="text-muted">(Controlla l'invio dell'header Referer)</small>
-      </label>
-    </div>
-    <div class="ms-4 mb-3" style="max-width:300px;">
-      <label for="referrer_policy" class="form-label">Valore</label>
-      <select name="referrer_policy" id="referrer_policy" class="form-select">
-        <option value="no-referrer" <?php if($referrerPolicy==='no-referrer') echo 'selected'; ?>>no-referrer</option>
-        <option value="no-referrer-when-downgrade" <?php if($referrerPolicy==='no-referrer-when-downgrade') echo 'selected'; ?>>no-referrer-when-downgrade</option>
-        <option value="same-origin" <?php if($referrerPolicy==='same-origin') echo 'selected'; ?>>same-origin</option>
-        <option value="origin" <?php if($referrerPolicy==='origin') echo 'selected'; ?>>origin</option>
-        <option value="strict-origin" <?php if($referrerPolicy==='strict-origin') echo 'selected'; ?>>strict-origin</option>
-        <option value="origin-when-cross-origin" <?php if($referrerPolicy==='origin-when-cross-origin') echo 'selected'; ?>>origin-when-cross-origin</option>
-        <option value="strict-origin-when-cross-origin" <?php if($referrerPolicy==='strict-origin-when-cross-origin') echo 'selected'; ?>>strict-origin-when-cross-origin</option>
-        <option value="unsafe-url" <?php if($referrerPolicy==='unsafe-url') echo 'selected'; ?>>unsafe-url</option>
-      </select>
-    </div>
-    <!-- Permissions-Policy -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" name="sec_headers[]" value="permissions_policy" id="pp" <?php echo in_array('permissions_policy', $secHeaders) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="pp">
-        Permissions-Policy <small class="text-muted">(Limita l'accesso a API: geolocalizzazione, camera, microfono, payment, fullscreen)</small>
-      </label>
-    </div>
-    <div class="row ms-4 mb-3">
-      <div class="col-md-2">
-        <label for="perm_geolocation" class="form-label">geolocation</label>
-        <input type="text" name="perm_geolocation" id="perm_geolocation" class="form-control" value="<?php echo htmlspecialchars($permGeolocation); ?>">
-      </div>
-      <div class="col-md-2">
-        <label for="perm_camera" class="form-label">camera</label>
-        <input type="text" name="perm_camera" id="perm_camera" class="form-control" value="<?php echo htmlspecialchars($permCamera); ?>">
-      </div>
-      <div class="col-md-2">
-        <label for="perm_microphone" class="form-label">microphone</label>
-        <input type="text" name="perm_microphone" id="perm_microphone" class="form-control" value="<?php echo htmlspecialchars($permMicrophone); ?>">
-      </div>
-      <div class="col-md-2">
-        <label for="perm_payment" class="form-label">payment</label>
-        <input type="text" name="perm_payment" id="perm_payment" class="form-control" value="<?php echo htmlspecialchars($permPayment); ?>">
-      </div>
-      <div class="col-md-2">
-        <label for="perm_fullscreen" class="form-label">fullscreen</label>
-        <input type="text" name="perm_fullscreen" id="perm_fullscreen" class="form-control" value="<?php echo htmlspecialchars($permFullscreen); ?>">
-      </div>
-    </div>
-    <!-- COOP -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" name="sec_headers[]" value="coop" id="coop_cb" <?php echo in_array('coop', $secHeaders) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="coop_cb">
-        Cross-Origin-Opener-Policy (COOP) <small class="text-muted">(Isola la finestra da contesti cross-origin)</small>
-      </label>
-    </div>
-    <div class="ms-4 mb-3" style="max-width:300px;">
-      <label for="coop" class="form-label">Valore</label>
-      <select name="coop" id="coop" class="form-select">
-        <option value="unsafe-none" <?php if($coop==='unsafe-none') echo 'selected'; ?>>unsafe-none</option>
-        <option value="same-origin" <?php if($coop==='same-origin') echo 'selected'; ?>>same-origin</option>
-        <option value="same-origin-allow-popups" <?php if($coop==='same-origin-allow-popups') echo 'selected'; ?>>same-origin-allow-popups</option>
-      </select>
-    </div>
-    <!-- COEP -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" name="sec_headers[]" value="coep" id="coep_cb" <?php echo in_array('coep', $secHeaders) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="coep_cb">
-        Cross-Origin-Embedder-Policy (COEP) <small class="text-muted">(Richiede che le risorse cross-origin siano servite con CORP/CORS)</small>
-      </label>
-    </div>
-    <div class="ms-4 mb-3" style="max-width:300px;">
-      <label for="coep" class="form-label">Valore</label>
-      <select name="coep" id="coep" class="form-select">
-        <option value="unsafe-none" <?php if($coep==='unsafe-none') echo 'selected'; ?>>unsafe-none</option>
-        <option value="require-corp" <?php if($coep==='require-corp') echo 'selected'; ?>>require-corp</option>
-        <option value="credentialless" <?php if($coep==='credentialless') echo 'selected'; ?>>credentialless</option>
-      </select>
-    </div>
-    <!-- CORP -->
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" name="sec_headers[]" value="corp" id="corp_cb" <?php echo in_array('corp', $secHeaders) ? 'checked' : ''; ?>>
-      <label class="form-check-label" for="corp_cb">
-        Cross-Origin-Resource-Policy (CORP) <small class="text-muted">(Definisce chi può incorporare le tue risorse)</small>
-      </label>
-    </div>
-    <div class="ms-4 mb-3" style="max-width:300px;">
-      <label for="corp" class="form-label">Valore</label>
-      <select name="corp" id="corp" class="form-select">
-        <option value="cross-origin" <?php if($corp==='cross-origin') echo 'selected'; ?>>cross-origin</option>
-        <option value="same-site" <?php if($corp==='same-site') echo 'selected'; ?>>same-site</option>
-        <option value="same-origin" <?php if($corp==='same-origin') echo 'selected'; ?>>same-origin</option>
-      </select>
-    </div>
-
+    <!-- Bottone di invio -->
     <div class="col-12">
       <button type="submit" class="btn btn-primary">Scansiona e genera header</button>
     </div>
   </form>
 
   <?php if ($domain && !empty($visited)): ?>
-    <h2 class="mb-4">Risultati Scansione</h2>
-    <div class="card mb-4">
-      <div class="card-body">
-        <h3 class="card-title h5">Pagine visitate (max <?php echo $maxPages; ?>)</h3>
-        <ul class="list-group">
+    <!-- Risultato .htaccess mostrato subito sotto il bottone -->
+    <div class="mb-4">
+      <h4>Blocco .htaccess generato</h4>
+      <div class="input-group">
+        <textarea id="htaccessBlock" class="form-control" rows="8" readonly><?php echo htmlspecialchars($htaccessBlock); ?></textarea>
+        <button class="btn btn-outline-secondary" type="button" id="copyButton">Copia negli appunti</button>
+      </div>
+      <small class="text-muted d-block">Copia il blocco nel tuo file .htaccess per abilitare gli header di sicurezza.</small>
+    </div>
+
+    <!-- Sezione risultati di scansione collassabile -->
+    <button class="btn btn-outline-secondary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#scanResults" aria-expanded="false" aria-controls="scanResults">
+      Mostra Dettagli Scansione
+    </button>
+    <div class="collapse" id="scanResults">
+      <div class="card card-body">
+        <h4>Pagine visitate (max <?php echo $maxPages; ?>)</h4>
+        <ul class="list-group mb-3">
           <?php foreach ($visited as $v): ?>
             <li class="list-group-item"><?php echo htmlspecialchars($v); ?></li>
           <?php endforeach; ?>
         </ul>
-      </div>
-    </div>
-
-    <div class="card mb-4">
-      <div class="card-body">
-        <h3 class="card-title h5">Risorse trovate</h3>
+        <h4>Risorse trovate</h4>
         <?php
           printResourceList('Script', $allResources['script']);
           printResourceList('Stili (CSS)', $allResources['style']);
@@ -487,26 +535,9 @@ if ($domain && !empty($visited)) {
           printResourceList('Font', $allResources['font']);
           printResourceList('Frame (iframe)', $allResources['frame']);
         ?>
-      </div>
-    </div>
-
-    <div class="card mb-4">
-      <div class="card-body">
-        <h3 class="card-title h5">Bozza di Content-Security-Policy</h3>
-        <p class="text-muted">La CSP include gli origin delle risorse trovate e <code>'self'</code>. Ricorda che se usi script/stili inline potresti dover aggiungere <code>'unsafe-inline'</code> oppure nonce/hash.</p>
+        <h4>Bozza di Content-Security-Policy</h4>
+        <p class="text-muted">La CSP include gli origin delle risorse trovate e <code>'self'</code>. Se il sito utilizza script/stili inline, potresti dover aggiungere <code>'unsafe-inline'</code> o nonce/hash.</p>
         <pre class="bg-light p-3"><?php echo htmlspecialchars($cspString); ?></pre>
-      </div>
-    </div>
-
-    <div class="card mb-4">
-      <div class="card-body">
-        <h3 class="card-title h5">Blocco .htaccess generato</h3>
-        <?php if ($htaccessBlock): ?>
-          <pre class="bg-light p-3"><?php echo htmlspecialchars($htaccessBlock); ?></pre>
-          <p class="text-muted">Copia questo blocco nel tuo file <code>.htaccess</code> o nella configurazione del VirtualHost. Assicurati che <code>mod_headers</code> sia abilitato e testa a fondo il sito.</p>
-        <?php else: ?>
-          <p class="text-muted">Nessun header di sicurezza selezionato o nessuna pagina trovata.</p>
-        <?php endif; ?>
       </div>
     </div>
   <?php elseif($domain): ?>
@@ -515,5 +546,20 @@ if ($domain && !empty($visited)) {
     </div>
   <?php endif; ?>
 </div>
+
+<!-- Bootstrap 5 JS (dipendenze Popper incluse) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Funzione per copiare il blocco .htaccess negli appunti
+  document.getElementById("copyButton")?.addEventListener("click", function(){
+    var text = document.getElementById("htaccessBlock").value;
+    navigator.clipboard.writeText(text).then(function(){
+      // Cambia temporaneamente il testo del bottone
+      var btn = document.getElementById("copyButton");
+      btn.textContent = "Copiato!";
+      setTimeout(function(){ btn.textContent = "Copia negli appunti"; }, 2000);
+    });
+  });
+</script>
 </body>
 </html>
