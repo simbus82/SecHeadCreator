@@ -300,15 +300,22 @@ if ($domain && !empty($visited)) {
 
   <!-- Form: Dominio sempre visibile -->
   <form method="get" class="row g-3 mb-4">
-    <div class="col-md-6">
+    <div class="col-12">
       <label for="domain" class="form-label">Dominio da scansionare</label>
       <input type="text" name="domain" id="domain" class="form-control" placeholder="https://example.com" value="<?php echo htmlspecialchars($domain); ?>" required>
       <small class="text-muted">Inserisci l'URL completo (con http/https).</small>
     </div>
-    <div class="col-md-6 d-flex align-items-end">
+      
+    <!-- Bottone di invio -->
+ 
+     <div class="offset-3 col-md-6 d-flex align-items-end" style="
+        justify-content: space-around;
+        flex-direction: row;
+    ">
       <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedConfig" aria-expanded="false" aria-controls="advancedConfig">
         Mostra Configurazione Avanzata
       </button>
+      <button type="submit" class="btn btn-primary">Scansiona e genera header</button>
     </div>
 
     <!-- Sezione avanzata collassabile -->
@@ -331,7 +338,7 @@ if ($domain && !empty($visited)) {
         <h4>Header di Sicurezza</h4>
         <!-- X-XSS-Protection -->
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_xss_protection" id="xss" <?php echo in_array('x_xss_protection', $secHeaders) ? 'checked' : ''; ?>>
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_xss_protection" id="xss" <?php echo in_array('x_xss_protection', $secHeaders) ? 'checked' : 'checked'; ?>>
           <label class="form-check-label" for="xss">
             X-XSS-Protection
             <small class="text-muted d-block">Protegge da attacchi XSS (sebbene deprecato in alcuni browser moderni).</small>
@@ -339,7 +346,7 @@ if ($domain && !empty($visited)) {
         </div>
         <!-- X-Frame-Options -->
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_frame_options" id="xfo" <?php echo in_array('x_frame_options', $secHeaders) ? 'checked' : ''; ?>>
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_frame_options" id="xfo" <?php echo in_array('x_frame_options', $secHeaders) ? 'checked' : 'checked'; ?>>
           <label class="form-check-label" for="xfo">
             X-Frame-Options
             <small class="text-muted d-block">Previene il clickjacking impedendo l'incorporamento in iframe da siti esterni.</small>
@@ -356,7 +363,7 @@ if ($domain && !empty($visited)) {
         </div>
         <!-- X-Content-Type-Options -->
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_content_type_options" id="xcto" <?php echo in_array('x_content_type_options', $secHeaders) ? 'checked' : ''; ?>>
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="x_content_type_options" id="xcto" <?php echo in_array('x_content_type_options', $secHeaders) ? 'checked' : 'checked'; ?>>
           <label class="form-check-label" for="xcto">
             X-Content-Type-Options
             <small class="text-muted d-block">Imposta "nosniff" per evitare interpretazioni errate dei MIME type.</small>
@@ -377,19 +384,19 @@ if ($domain && !empty($visited)) {
             <small class="text-muted">Ad esempio, 31536000 (1 anno).</small>
           </div>
           <div class="col-md-4 form-check align-self-end">
-            <input class="form-check-input" type="checkbox" name="hsts_include_subdomains" id="hsts_include_subdomains" <?php echo $hstsIncludeSubdomains ? 'checked' : ''; ?>>
+            <input class="form-check-input" type="checkbox" name="hsts_include_subdomains" id="hsts_include_subdomains" <?php echo $hstsIncludeSubdomains ? 'checked' : 'checked'; ?>>
             <label class="form-check-label" for="hsts_include_subdomains">includeSubDomains</label>
             <small class="text-muted d-block">Consigliato se tutti i sottodomini usano HTTPS.</small>
           </div>
           <div class="col-md-4 form-check align-self-end">
-            <input class="form-check-input" type="checkbox" name="hsts_preload" id="hsts_preload" <?php echo $hstsPreload ? 'checked' : ''; ?>>
+            <input class="form-check-input" type="checkbox" name="hsts_preload" id="hsts_preload" <?php echo $hstsPreload ? 'checked' : 'checked'; ?>>
             <label class="form-check-label" for="hsts_preload">preload</label>
             <small class="text-muted d-block">Abilita l'inclusione nella lista di preload HSTS.</small>
           </div>
         </div>
         <!-- Referrer-Policy -->
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="referrer_policy" id="rp" <?php echo in_array('referrer_policy', $secHeaders) ? 'checked' : ''; ?>>
+          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="referrer_policy" id="rp" <?php echo in_array('referrer_policy', $secHeaders) ? 'checked' : 'checked'; ?>>
           <label class="form-check-label" for="rp">
             Referrer-Policy
             <small class="text-muted d-block">Controlla quali informazioni inviare nell'header Referer (es. "strict-origin-when-cross-origin").</small>
@@ -502,11 +509,6 @@ if ($domain && !empty($visited)) {
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Bottone di invio -->
-    <div class="col-12">
-      <button type="submit" class="btn btn-primary">Scansiona e genera header</button>
     </div>
   </form>
 
