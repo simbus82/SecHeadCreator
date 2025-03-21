@@ -444,56 +444,62 @@ if ($domain && !empty($visited)) {
             <small class="text-muted">Esempio: (self)</small>
           </div>
         </div>
-        <!-- COOP -->
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="coop" id="coop_cb" <?php echo in_array('coop', $secHeaders) ? 'checked' : ''; ?>>
-          <label class="form-check-label" for="coop_cb">
-            Cross-Origin-Opener-Policy (COOP)
-            <small class="text-muted d-block">Isola la finestra da contesti cross-origin per prevenire attacchi di tipo side-channel.</small>
-          </label>
-        </div>
-        <div class="ms-4 mb-3" style="max-width:300px;">
-          <label for="coop" class="form-label">Valore di COOP</label>
-          <select name="coop" id="coop" class="form-select">
-            <option value="unsafe-none" <?php if($coop==='unsafe-none') echo 'selected'; ?>>unsafe-none (disabilitato)</option>
-            <option value="same-origin" <?php if($coop==='same-origin') echo 'selected'; ?>>same-origin</option>
-            <option value="same-origin-allow-popups" <?php if($coop==='same-origin-allow-popups') echo 'selected'; ?>>same-origin-allow-popups</option>
-          </select>
-          <small class="text-muted">Consigliato: same-origin.</small>
-        </div>
-        <!-- COEP -->
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="coep" id="coep_cb" <?php echo in_array('coep', $secHeaders) ? 'checked' : ''; ?>>
-          <label class="form-check-label" for="coep_cb">
-            Cross-Origin-Embedder-Policy (COEP)
-            <small class="text-muted d-block">Richiede che le risorse cross-origin siano servite con CORP/CORS.</small>
-          </label>
-        </div>
-        <div class="ms-4 mb-3" style="max-width:300px;">
-          <label for="coep" class="form-label">Valore di COEP</label>
-          <select name="coep" id="coep" class="form-select">
-            <option value="unsafe-none" <?php if($coep==='unsafe-none') echo 'selected'; ?>>unsafe-none (disabilitato)</option>
-            <option value="require-corp" <?php if($coep==='require-corp') echo 'selected'; ?>>require-corp</option>
-            <option value="credentialless" <?php if($coep==='credentialless') echo 'selected'; ?>>credentialless</option>
-          </select>
-          <small class="text-muted">Scegli in base alle risorse usate dal sito.</small>
-        </div>
-        <!-- CORP -->
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="sec_headers[]" value="corp" id="corp_cb" <?php echo in_array('corp', $secHeaders) ? 'checked' : ''; ?>>
-          <label class="form-check-label" for="corp_cb">
-            Cross-Origin-Resource-Policy (CORP)
-            <small class="text-muted d-block">Definisce chi può incorporare le tue risorse.</small>
-          </label>
-        </div>
-        <div class="ms-4 mb-3" style="max-width:300px;">
-          <label for="corp" class="form-label">Valore di CORP</label>
-          <select name="corp" id="corp" class="form-select">
-            <option value="cross-origin" <?php if($corp==='cross-origin') echo 'selected'; ?>>cross-origin (più permissivo)</option>
-            <option value="same-site" <?php if($corp==='same-site') echo 'selected'; ?>>same-site</option>
-            <option value="same-origin" <?php if($corp==='same-origin') echo 'selected'; ?>>same-origin (più restrittivo)</option>
-          </select>
-          <small class="text-muted">Seleziona la policy in base alle tue esigenze.</small>
+        <div class="mt-4">
+          <h5 class="mb-3"><span class="text-warning">&#9888;</span> Sperimentali</h5>
+        
+          <!-- COOP -->
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="sec_headers[]" value="coop" id="coop_cb" <?php echo in_array('coop', $secHeaders) ? 'checked' : ''; ?>>
+            <label class="form-check-label" for="coop_cb">
+              Cross-Origin-Opener-Policy (COOP)
+              <small class="text-muted d-block">Isola la finestra da contesti cross-origin per prevenire attacchi di tipo side-channel.</small>
+            </label>
+          </div>
+          <div class="ms-4 mb-3" style="max-width:300px;">
+            <label for="coop" class="form-label">Valore di COOP</label>
+            <select name="coop" id="coop" class="form-select">
+              <option value="unsafe-none" <?php if($coop==='unsafe-none') echo 'selected'; ?>>unsafe-none (disabilitato)</option>
+              <option value="same-origin" <?php if($coop==='same-origin') echo 'selected'; ?>>same-origin</option>
+              <option value="same-origin-allow-popups" <?php if($coop==='same-origin-allow-popups') echo 'selected'; ?>>same-origin-allow-popups</option>
+            </select>
+            <small class="text-muted">Consigliato: same-origin.</small>
+          </div>
+        
+          <!-- COEP -->
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="sec_headers[]" value="coep" id="coep_cb" <?php echo in_array('coep', $secHeaders) ? 'checked' : ''; ?>>
+            <label class="form-check-label" for="coep_cb">
+              Cross-Origin-Embedder-Policy (COEP)
+              <small class="text-muted d-block">Richiede che le risorse cross-origin siano servite con CORP/CORS.</small>
+            </label>
+          </div>
+          <div class="ms-4 mb-3" style="max-width:300px;">
+            <label for="coep" class="form-label">Valore di COEP</label>
+            <select name="coep" id="coep" class="form-select">
+              <option value="unsafe-none" <?php if($coep==='unsafe-none') echo 'selected'; ?>>unsafe-none (disabilitato)</option>
+              <option value="require-corp" <?php if($coep==='require-corp') echo 'selected'; ?>>require-corp</option>
+              <option value="credentialless" <?php if($coep==='credentialless') echo 'selected'; ?>>credentialless</option>
+            </select>
+            <small class="text-muted">Scegli in base alle risorse usate dal sito.</small>
+          </div>
+        
+          <!-- CORP -->
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="sec_headers[]" value="corp" id="corp_cb" <?php echo in_array('corp', $secHeaders) ? 'checked' : ''; ?>>
+            <label class="form-check-label" for="corp_cb">
+              Cross-Origin-Resource-Policy (CORP)
+              <small class="text-muted d-block">Definisce chi può incorporare le tue risorse.</small>
+            </label>
+          </div>
+          <div class="ms-4 mb-3" style="max-width:300px;">
+            <label for="corp" class="form-label">Valore di CORP</label>
+            <select name="corp" id="corp" class="form-select">
+              <option value="cross-origin" <?php if($corp==='cross-origin') echo 'selected'; ?>>cross-origin (più permissivo)</option>
+              <option value="same-site" <?php if($corp==='same-site') echo 'selected'; ?>>same-site</option>
+              <option value="same-origin" <?php if($corp==='same-origin') echo 'selected'; ?>>same-origin (più restrittivo)</option>
+            </select>
+            <small class="text-muted">Seleziona la policy in base alle tue esigenze.</small>
+          </div>
         </div>
       </div>
     </div>
